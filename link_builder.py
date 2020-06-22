@@ -48,6 +48,8 @@ class AdUrlBuilder(UrlBuilder):
         now = datetime.now()
         self.hour = str(time(now.hour,now.minute,now.second))
     def generate_token(self):
+        AdUrlBuilder.get_date()
+        AdUrlBuilder.get_hour()
         strings = string.ascii_lowercase + string.ascii_uppercase
         token = ""
         for x in range(7):
@@ -70,6 +72,8 @@ class WithoutAdUrlBuilder(UrlBuilder):
     def get_ip_addy(self,ip_addy):
         self.link.ip_addy = ip_addy
     def generate_token(self):
+        WithoutAdUrlBuilder.get_date(self)
+        WithoutAdUrlBuilder.get_hour(self)
         strings = string.ascii_lowercase + string.ascii_uppercase
         token = ""
         for x in range(7):
