@@ -1,11 +1,13 @@
-from flask import Flask, redirect, request, render_template, abort
+from flask import Flask, redirect, request, render_template, abort, jsonify
 import link_builder
 from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 db = SQLAlchemy(app)
 #Director Class
-
+global domain_name
+#Change domain_name with your domain name
+domain_name = "127.0.0.1:5000"
 class UrlDatabaseModel(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     real_link = db.Column(db.String(100),unique=False,nullable=False)
@@ -42,6 +44,25 @@ def short_it():
     db.session.add(created_url)
     db.session.commit()
     return redirect("/")
+@app.route('/api/shortit',methods=["POST"])
+def api_short_it():
+    try:
+        builder = CreateUrl(request.json["ad_type"]).create()
+        builder.get_ip_addy(request.remote_addr)
+        builder.get_real_link(request.json["url"])
+        builder.generate_token()
+        created_url = UrlDatabaseModel(real_link= builder.link.real_link,ip_addy= builder.link.ip_addy,ad_type=builder.link.ad_type,token=builder.link.token,date=builder.link.date,hour=builder.link.hour)
+        db.session.add(created_url)
+        db.session.commit()
+        return_data = {
+            "Status": "Success",
+            "Shortened_url": "http://" + domain_name + "/" + builder.link.token
+        }
+    except ValueError:
+        return_data = {
+            "Status": "Failure"
+        }
+    return jsonify(return_data)
 @app.route("/shortenedlinks")
 def shortenedlinks():
     URLs = UrlDatabaseModel.query.all()
